@@ -1,8 +1,26 @@
 import socket
 from tkinter import *
 from  threading import Thread
-from PIL import ImageTk, Image
 import random
+from PIL import ImageTk, Image
+
+screen_width = None
+screen_height = None
+
+SERVER = None
+PORT = None
+IP_ADDRESS = None
+playerName = None
+
+canvas1 = None
+
+nameEntry = None
+nameWindow = None
+gameWindow = None
+
+
+
+
 
 def saveName():
     global SERVER
@@ -10,53 +28,124 @@ def saveName():
     global nameWindow
     global nameEntry
 
-    playerName=nameEntry.get()
+    playerName = nameEntry.get()
     nameEntry.delete(0, END)
     nameWindow.destroy()
+
     SERVER.send(playerName.encode())
+
+    
+
+
 
 def askPlayerName():
     global playerName
     global nameEntry
     global nameWindow
-    global screen_height
-    global screen_width
     global canvas1
 
-    nameWindow = Tk()
-    nameWindow.title("Ludo Ladder")
-    nameWindow.attributes("-fullscreen", True)
+    nameWindow  = Tk()
+    nameWindow.title("Tambola Family Fun")
+    nameWindow.geometry('800x600')
 
-    screen_width=nameWindow.winfo_screenwidth()
-    screen_height=nameWindow.winfo_screenheight()
 
-    bg = ImageTk.PhotoImage(file="./assets/background.png")
+    screen_width = nameWindow.winfo_screenwidth()
+    screen_height = nameWindow.winfo_screenheight()
 
-    canvas1 = Canvas(nameWindow, width=500, height=500)
-    canvas1.pack(fill="both", expand=True)
-    canvas1.create_image(0,0, image=bg, anchor="nw")
-    canvas1.create_text(screen_width/2, screen_height/5, text="Enter name", font=("chalkboard SE", 100),fill="white")
+    bg = ImageTk.PhotoImage(file = "./assets/background.png")
 
-    nameEntry = Entry(nameWindow, width=15, justify="center", font=("chalkboard SE", 50),bd=5,bg="white")
-    nameEntry.place(x=screen_width/2 - 220, y=screen_height/4 + 100)
+    canvas1 = Canvas( nameWindow, width = 500,height = 500)
+    canvas1.pack(fill = "both", expand = True)
+    # Display image
+    canvas1.create_image( 0, 0, image = bg, anchor = "nw")
+    canvas1.create_text( screen_width/4.5,screen_height/8, text = "Enter Name", font=("Chalkboard SE",60), fill="black")
 
-    button = Button(nameWindow, text="Save", font=("Chalkboard SE", 30), width=15,command= saveName, height=2, bg="#80DEEA", bd=3)
-    button.place(x=screen_width/2 -130, y=screen_height/2 -30)
+    nameEntry = Entry(nameWindow, width=15, justify='center', font=('Chalkboard SE', 30), bd=5, bg='white')
+    nameEntry.place(x = screen_width/7, y=screen_height/5.5 )
+
+
+    button = Button(nameWindow, text="Save", font=("Chalkboard SE", 30),width=11, command=saveName, height=2, bg="#80deea", bd=3)
+    button.place(x = screen_width/6, y=screen_height/4)
 
     nameWindow.resizable(True, True)
     nameWindow.mainloop()
+
+def createTicket():
+    global gameWindow
+    global ticketGrid
+
+    mainLable = Label(gameWindow, width=65, height=16, relief='ridge', borderwidth=5, bg='white')
+    mainLable.place(x=95, y=119)
+
+    xPos = 105
+    yPos = 130
+
+    for row in range(0, 3):
+        rowList = []
+
+        for col in range(0, 9):
+            if (platform.system() == "Darwin"):
+                # For Mac users
+                boxButton = Button(gameWindow,
+                                   font=("Chalkboard SE", 18),
+                                   borderwidth=3,
+                                   pady=23,
+                                   padx=-22,
+                                   bg="#fff176",  # Initial Yellow color
+                                   highlightbackground="#fff176",
+                                   activebackground="#c5ela5")  # onPress Green Color
+                
+                boxButton.place(x=xPos, y=yPos)
+            else:
+                # For windows users
+                boxButton = Tk.Button(gameWindow, font=("Chalkboard SE", 30), width=3, height=2, borderwidth=5, bg="#fff176")
+
+            boxButton.place(x=xPos, y=yPos)
+
+            rowList.append(boxButton)
+            xPos += 64
+
+        # Creating the nested array
+        ticketGrid.append(rowList)
+        xPos = 105
+        yPos += 82
+
+def placeNumbers():
+    global ticketGrid
+    global currentNumberList
+
+    for row in range(0, 3):
+        randomColList = []
+        counter = 0
+
+        # getting random 5 cols
+        while counter <= 4:
+            randomCol = random.randint(0, 8)
+            if (randomCol not in randomColList):
+                randomColList.append(randomCol)
+                counter += 1
+
+
+
+def recivedMsg():
+    pass
+
 
 def setup():
     global SERVER
     global PORT
     global IP_ADDRESS
 
-    PORT  = 5000
+    PORT  = 6000
     IP_ADDRESS = '127.0.0.1'
 
     SERVER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     SERVER.connect((IP_ADDRESS, PORT))
 
+    thread = Thread(target=recivedMsg)
+    thread.start()
 
-    # Creating First Window
     askPlayerName()
+
+
+setup()
